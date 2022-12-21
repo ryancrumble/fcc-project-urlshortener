@@ -38,6 +38,24 @@ app.get('/', (req, res) => {
     res.sendFile(publicDir + '/index.html');
 });
 
+// Get original url from short url
+app.get('/api/shorturl/:shortUrl', async (req, res) => {
+    try {
+        const entry = await UrlModel.findOne({
+            short_url: req.params.shortUrl
+        })
+
+        if (!entry) {
+            return res.status(404).json('No URL found')
+        }
+        // Redirect to original url
+        return res.redirect(entry.original_url)
+    } catch (error) {
+        res.status(500).json('Internal server error')
+    }
+})
+
+
 // Create new short url
 app.post('/api/shorturl', (req, res) => {
     const _url = req.body.url
@@ -73,7 +91,7 @@ app.post('/api/shorturl', (req, res) => {
                 })
 
                 await newEntry.save()
-                
+
                 return res.json({
                     original_url: newEntry.original_url,
                     short_url: newEntry.short_url
@@ -86,6 +104,7 @@ app.post('/api/shorturl', (req, res) => {
         res.status(500).json('Internal server error')
     }
 });
+
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
